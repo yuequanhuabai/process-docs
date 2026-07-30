@@ -1,0 +1,380 @@
+<title>流程管理页 · 原型预览</title>
+<style>
+  /* ===== Element Plus 默认视觉变量（忠实复刻，非自创配色） ===== */
+  :root {
+    --ep-primary: #409eff;
+    --ep-success: #67c23a;
+    --ep-warning: #e6a23c;
+    --ep-danger:  #f56c6c;
+    --ep-info:    #909399;
+
+    --text-primary:  #303133;
+    --text-regular:  #606266;
+    --text-secondary:#909399;
+
+    --border-base:    #dcdfe6;
+    --border-light:   #ebeef5;
+    --fill-light:     #f5f7fa;
+
+    /* 深色侧栏（对齐 UI 配色文档：EP 经典深色菜单 + 暖金激活） */
+    --side-bg:     #545c64;
+    --side-text:   #bfcbd9;
+    --side-hover:  #434a50;
+    --side-active: #ffd04b;
+
+    --app-bg: #f0f2f5;
+
+    --font: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  }
+
+  /* 这是复刻真实 app 的浅色 UI，刻意锁定单一外观（不随查看器深浅主题变化） */
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--text-regular);
+    background: var(--app-bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== 原型说明条（刻意用非 EP 风格，避免与界面混淆） ===== */
+  .proto-note {
+    background: #fff7e6;
+    border-bottom: 1px solid #ffe0a3;
+    color: #8a6d3b;
+    font-size: 12.5px;
+    line-height: 1.5;
+    padding: 8px 20px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .proto-note b { color: #b8860b; font-weight: 600; }
+
+  /* ===== 应用外框：深色侧栏 + 顶栏 + 内容区 ===== */
+  .app {
+    display: flex;
+    min-height: calc(100vh - 34px);
+  }
+
+  /* 侧栏 */
+  .sidebar {
+    width: 210px;
+    flex-shrink: 0;
+    background: var(--side-bg);
+    color: var(--side-text);
+    display: flex;
+    flex-direction: column;
+  }
+  .brand {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 20px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .brand .logo {
+    width: 22px; height: 22px; border-radius: 5px;
+    background: linear-gradient(135deg, #409eff, #66b1ff);
+    display: grid; place-items: center;
+    font-size: 13px;
+  }
+  .menu { padding: 8px 0; }
+  .menu-item {
+    height: 46px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+  }
+  .menu-item .ico { width: 18px; text-align: center; opacity: .9; }
+  .menu-item:hover { background: var(--side-hover); color: #fff; }
+  .menu-item.active { color: var(--side-active); }
+
+  /* 主区 */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    height: 56px;
+    background: #fff;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+  }
+  .crumb { font-size: 14px; color: var(--text-regular); }
+  .crumb .sep { color: var(--text-secondary); margin: 0 6px; }
+  .crumb .cur { color: var(--text-primary); }
+  .userbox { display: flex; align-items: center; gap: 14px; font-size: 14px; color: var(--text-regular); }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--ep-primary); color: #fff;
+    display: grid; place-items: center; font-size: 13px;
+  }
+  .logout { color: var(--text-secondary); cursor: pointer; }
+  .logout:hover { color: var(--ep-primary); }
+
+  .content { padding: 20px; flex: 1; }
+  .card {
+    background: #fff;
+    border-radius: 4px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+
+  /* ===== 流程管理页本体 ===== */
+  /* 工具条 */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .toolbar .title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+
+  /* el-switch 复刻 */
+  .switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .switch .track {
+    width: 40px; height: 20px; border-radius: 10px;
+    background: var(--border-base);
+    position: relative; transition: background .3s;
+  }
+  .switch .track::after {
+    content: ""; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; transition: left .3s;
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  }
+  .switch.on .track { background: var(--ep-primary); }
+  .switch.on .track::after { left: 22px; }
+  .switch .label { font-size: 14px; color: var(--text-primary); }
+
+  /* el-table 复刻 */
+  .table-wrap { overflow-x: auto; }
+  table.eltable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    border: 1px solid var(--border-light);
+  }
+  table.eltable th, table.eltable td {
+    text-align: left;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border-light);
+    border-right: 1px solid var(--border-light);
+  }
+  table.eltable th:last-child, table.eltable td:last-child { border-right: none; }
+  table.eltable thead th {
+    color: var(--text-secondary);
+    font-weight: 500;
+    background: #fff;
+  }
+  table.eltable tbody td { color: var(--text-regular); }
+  table.eltable tbody tr:hover td { background: var(--fill-light); }
+  table.eltable tbody tr:last-child td { border-bottom: none; }
+  .col-name { color: var(--text-primary); }
+  .nowrap { white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; }
+
+  /* el-tag 复刻（light 变体） */
+  .tag {
+    display: inline-block;
+    height: 24px; line-height: 22px;
+    padding: 0 9px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+  .tag.success { color: var(--ep-success); background: #f0f9eb; border-color: #e1f3d8; }
+  .tag.info    { color: var(--ep-info);    background: #f4f4f5; border-color: #e9e9eb; }
+
+  /* el-button link 复刻 */
+  .btn-link {
+    background: none; border: none; padding: 0;
+    font-size: 14px; cursor: pointer;
+    font-family: inherit;
+    transition: opacity .2s;
+  }
+  .btn-link + .btn-link { margin-left: 12px; }
+  .btn-link:hover { opacity: .7; }
+  .btn-link.warning { color: var(--ep-warning); }
+  .btn-link.success { color: var(--ep-success); }
+  .btn-link.danger  { color: var(--ep-danger); }
+  .btn-link:focus-visible { outline: 2px solid var(--ep-primary); outline-offset: 2px; border-radius: 2px; }
+
+  /* el-pagination 复刻 */
+  .pager {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-regular);
+  }
+  .pager .total { margin-right: 6px; }
+  .pager button, .pager .pg {
+    min-width: 28px; height: 28px;
+    border: none; background: #fff;
+    color: var(--text-regular);
+    border-radius: 4px;
+    font-size: 13px; cursor: pointer;
+    font-variant-numeric: tabular-nums;
+  }
+  .pager .pg:hover { color: var(--ep-primary); }
+  .pager .pg.active { color: var(--ep-primary); font-weight: 600; }
+  .pager button:disabled { color: #c0c4cc; cursor: not-allowed; }
+
+  @media (max-width: 720px) {
+    .sidebar { width: 60px; }
+    .brand span, .menu-item span:not(.ico) { display: none; }
+    .brand { justify-content: center; padding: 0; }
+    .menu-item { justify-content: center; padding: 0; }
+  }
+</style>
+
+<div class="proto-note">
+  <b>原型近似图</b>
+  <span>手工复刻 Element Plus 外观，用于确认<strong>布局结构与组件形态</strong>；圆角/阴影/间距等细节与真实 EP 可能略有出入，最终以 <code>npm run dev</code> 实跑为准。数据为示意。</span>
+</div>
+
+<div class="app">
+  <!-- 深色侧栏 -->
+  <aside class="sidebar">
+    <div class="brand"><span class="logo">流</span><span>Flowable 工作流</span></div>
+    <nav class="menu">
+      <div class="menu-item"><span class="ico">🏠</span><span>首页</span></div>
+      <div class="menu-item"><span class="ico">👤</span><span>用户管理</span></div>
+      <div class="menu-item active"><span class="ico">📋</span><span>流程管理</span></div>
+      <div class="menu-item"><span class="ico">ℹ️</span><span>关于</span></div>
+    </nav>
+  </aside>
+
+  <!-- 主区 -->
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb"><span>工作流</span><span class="sep">/</span><span class="cur">流程管理</span></div>
+      <div class="userbox">
+        <span class="avatar">管</span>
+        <span>管理员</span>
+        <span class="logout">退出</span>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="card">
+        <!-- 工具条：标题 + 只看最新版本开关 -->
+        <div class="toolbar">
+          <span class="title">流程管理</span>
+          <span class="switch" title="只看最新版本（当前关闭，显示所有版本）">
+            <span class="track"></span>
+            <span class="label">只看最新版本</span>
+          </span>
+        </div>
+
+        <!-- 表格 -->
+        <div class="table-wrap">
+          <table class="eltable">
+            <thead>
+              <tr>
+                <th>流程名称</th>
+                <th>流程 Key</th>
+                <th>版本</th>
+                <th>状态</th>
+                <th>资源名</th>
+                <th class="nowrap">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-name">请假流程</td>
+                <td>leaveProcess</td>
+                <td class="num">2</td>
+                <td><span class="tag success">激活</span></td>
+                <td>processes/leave.bpmn20.xml</td>
+                <td class="nowrap">
+                  <button class="btn-link warning">挂起</button>
+                  <button class="btn-link danger">删除</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="col-name">请假流程</td>
+                <td>leaveProcess</td>
+                <td class="num">1</td>
+                <td><span class="tag info">挂起</span></td>
+                <td>processes/leave.bpmn20.xml</td>
+                <td class="nowrap">
+                  <button class="btn-link success">激活</button>
+                  <button class="btn-link danger">删除</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="col-name">报销流程</td>
+                <td>expenseProcess</td>
+                <td class="num">3</td>
+                <td><span class="tag success">激活</span></td>
+                <td>processes/expense.bpmn20.xml</td>
+                <td class="nowrap">
+                  <button class="btn-link warning">挂起</button>
+                  <button class="btn-link danger">删除</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="col-name">报销流程</td>
+                <td>expenseProcess</td>
+                <td class="num">2</td>
+                <td><span class="tag info">挂起</span></td>
+                <td>processes/expense.bpmn20.xml</td>
+                <td class="nowrap">
+                  <button class="btn-link success">激活</button>
+                  <button class="btn-link danger">删除</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="col-name">采购审批</td>
+                <td>purchaseProcess</td>
+                <td class="num">1</td>
+                <td><span class="tag success">激活</span></td>
+                <td>processes/purchase.bpmn20.xml</td>
+                <td class="nowrap">
+                  <button class="btn-link warning">挂起</button>
+                  <button class="btn-link danger">删除</button>
+                </td>
+              </tr>
+              <tr>
+                <td class="col-name">出差申请</td>
+                <td>tripProcess</td>
+                <td class="num">1</td>
+                <td><span class="tag success">激活</span></td>
+                <td>processes/trip.bpmn20.xml</td>
+                <td class="nowrap">
+                  <button class="btn-link warning">挂起</button>
+                  <button class="btn-link danger">删除</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pager">
+          <span class="total">共 16 条</span>
+          <button disabled aria-label="上一页">‹</button>
+          <span class="pg active">1</span>
+          <span class="pg">2</span>
+          <button aria-label="下一页">›</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
