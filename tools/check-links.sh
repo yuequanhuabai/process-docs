@@ -59,8 +59,6 @@ should_ignore() {
 # 写完一篇就从这里删掉一行
 is_planned() {
   case "$1" in
-    */03-完整代码.md|03-完整代码.md)     return 0 ;;  # Day16 待写
-    */04-疑问与解答.md|04-疑问与解答.md) return 0 ;;  # Day16 待写
     */05-外围四表.md|05-外围四表.md)     return 0 ;;  # hi_tables 支线待写
   esac
   return 1
