@@ -22,7 +22,7 @@
 ## 目录结构
 
 ```
-docs/
+process-docs/
 ├─ README.md                    ← 本文
 │
 ├─ 双CLI工作流.md                协作总纲：两个 CLI 怎么分工
@@ -87,6 +87,25 @@ bash tools/check-links.sh -v       # 连忽略掉的也列出来，排查误判�
 
 ---
 
+## 仓库与分支
+
+`core2` 本身不是 git 仓库，底下三个各自独立：
+
+| 目录 | 仓库 | 分支约定 |
+|---|---|---|
+| `process-docs/` | `process-docs.git` | 本仓库，唯一文档来源 |
+| `process-back/` | 后端代码 | **在 `dev` 开发** |
+| `process-front/` | 前端代码 | **在 `dev` 开发** |
+
 ## 关于历史
 
-本仓库的文档 2026-07-30 从 `process-back/docs/` 与 `process-front/docs/` 迁入。**迁移前的修改历史留在那两个代码仓库里**（`process-back` 有 50 条、`process-front` 有 18 条涉及 docs 的提交），本仓库从导入那一刻起算。要查旧账去原仓库 `git log -- docs/<文件>`。
+本仓库的文档 2026-07-30 从 `process-back/docs/` 与 `process-front/docs/` 迁入，之后两个代码仓库**在 `dev` 分支上删除了 `docs/`**。
+
+**`master` 分支保持不变，作为迁移前的完整快照**（`process-back/master` 48 篇、`process-front/master` 23 篇）以及那 68 条涉及 docs 的提交历史的归档。本仓库的修改历史从导入那一刻起算 —— 要查旧账：
+
+```bash
+git -C ../process-back  log master -- docs/<文件>
+git -C ../process-front log master -- docs/<文件>
+```
+
+> 💡 统计中文文件名时注意：`git ls-files` / `ls-tree` 默认会把非 ASCII 路径转义并加引号，`grep '^docs/'` 这类锚点会失配。加 `-c core.quotePath=false` 才对。
