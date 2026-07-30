@@ -1,0 +1,19 @@
+### IntelliJ IDEA / JetBrains ###
+.idea
+*.iml
+*.iws
+*.ipr
+
+### VS Code ###
+.vscode/
+
+### 操作系统生成物 ###
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### 编辑器临时文件 ###
+*~
+*.swp
+*.swo
+.*.sw?
