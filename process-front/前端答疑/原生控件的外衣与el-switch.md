@@ -310,18 +310,16 @@ DevTools 里展开 `.el-switch`，能看到 `<input type="checkbox" class="el-sw
 
 **1. 有一个真实的竞态隐患：请求期间开关没锁。**
 
-`handleLatestChange` 里直接 `loadList()`，而开关在请求返回前**可以被反复点**。快速点三下会并发三个请求，而**响应回来的顺序不保证**——如果先发的后回，`list` 会被旧结果覆盖，页面显示的内容和开关状态对不上。
-
-这跟 `async-await与JS单线程.md` 末尾讲的请求竞态是**同一个问题在另一个控件上的复现**。EP 已经把解法准备好了，加一个 prop 就行：
+`handleLatestChange` 里直接 `loadList()`，而开关在请求返回前**可以被反复点**。快速点三下会并发三个请求，而**响应回来的顺序不保证**——如果先发的后回，`list` 会被旧结果覆盖，页面显示的内容和开关状态对不上。解法是加一个 prop：
 
 ```html
 <el-switch v-model="latestOnly" active-text="只看最新版本"
            :loading="loading" @change="handleLatestChange" />
 ```
 
-`loading` 为真时组件**自动连带 disabled**（`switch.vue.mjs:42-44`），一个 prop 顶两个，还会显示转圈图标。而 `loading` 这个 ref 已经在 `loadList()` 里管好了（`index.vue:75` 置 true、`:81` 的 `finally` 置 false），**接上即可，零额外代码**。
+`loading` 为真时组件**自动连带 disabled**（源码见下篇 §4.1），一个 prop 顶两个，还会显示转圈图标。而 `loading` 这个 ref 已经在 `loadList()` 里管好了（`index.vue:75` 置 true、`:83-85` 的 `finally` 置 false），**接上即可，零额外代码**。
 
-> 同样的问题在分页器上也存在（快速连点页码），一并加 `:disabled="loading"` 更稳。
+> 📌 **这一条已抽成单独一篇：[`请求竞态与控件禁用.md`](./请求竞态与控件禁用.md)**（2026-08-10）。它牵扯到三个控件两个页面，藏在本篇里位置太偏、找不到。那边讲全了：不加的确切后果（**静默错位，不报错**）、响应为什么会乱序、jQuery 时代手动 disable 的痛点、`switch.vue_..._lang.mjs:42-44` 的源码为证、**为什么加 `await` 治不了**，以及三个可跑实验。**本条只留结论，细节去那篇。**
 
 **2. `current.value = 1` 这句是必须的，别删。**
 切换筛选条件后总条数会变，如果停在第 3 页而新结果只有 1 页，会看到空表格。这和 `handleDelete` 里那句 `if (list.value.length === 1 && current.value > 1) current.value -= 1`（`index.vue:116-118`）是同一类考虑。
