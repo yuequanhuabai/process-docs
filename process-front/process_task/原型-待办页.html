@@ -1,0 +1,589 @@
+<title>Day 17 · 待办页 · 原型预览</title>
+<style>
+  /* ===== Element Plus 默认视觉变量（忠实复刻，非自创配色，同 Day 16 原型） ===== */
+  :root {
+    --ep-primary: #409eff;
+    --ep-success: #67c23a;
+    --ep-warning: #e6a23c;
+    --ep-danger:  #f56c6c;
+    --ep-info:    #909399;
+
+    --text-primary:  #303133;
+    --text-regular:  #606266;
+    --text-secondary:#909399;
+    --text-placeholder:#a8abb2;
+
+    --border-base:    #dcdfe6;
+    --border-light:   #ebeef5;
+    --fill-light:     #f5f7fa;
+
+    /* 深色侧栏：取自真实代码 layout/index.vue 的 #304156 + 暖金激活 */
+    --side-bg:     #304156;
+    --side-text:   #bfcbd9;
+    --side-hover:  #263445;
+    --side-active: #ffd04b;
+
+    --app-bg: #f0f2f5;
+
+    --font: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  }
+
+  /* 复刻真实 app 的浅色 UI，刻意锁定单一外观（不随查看器深浅主题变化） */
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--text-regular);
+    background: var(--app-bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== 原型说明条（刻意用非 EP 风格，避免与界面混淆） ===== */
+  .proto-note {
+    background: #fff7e6;
+    border-bottom: 1px solid #ffe0a3;
+    color: #8a6d3b;
+    font-size: 12.5px;
+    line-height: 1.6;
+    padding: 10px 20px;
+  }
+  .proto-note b { color: #b8860b; font-weight: 600; }
+  .proto-note code {
+    background: #fff1cc; padding: 1px 5px; border-radius: 3px;
+    font-size: 12px;
+  }
+
+  /* ===== 分节标题（原型专用，非界面元素） ===== */
+  .proto-section {
+    margin: 0;
+    padding: 22px 20px 10px;
+    border-top: 3px solid #e4e7ed;
+    background: var(--app-bg);
+  }
+  .proto-section:first-of-type { border-top: none; }
+  .proto-section h2 {
+    margin: 0 0 4px;
+    font-size: 16px;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  .proto-section .sub {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .proto-section .sub .route {
+    font-family: ui-monospace, Consolas, monospace;
+    background: #eef1f6; padding: 1px 6px; border-radius: 3px; color: #5a6b82;
+  }
+  .badge {
+    display: inline-block; vertical-align: middle;
+    font-size: 11.5px; padding: 1px 7px; border-radius: 3px;
+    margin-left: 6px; font-weight: 600;
+  }
+  .badge.rec  { background: #f0f9eb; color: #529b2e; border: 1px solid #cfe8bd; }
+  .badge.now  { background: #f4f4f5; color: #73767a; border: 1px solid #e0e0e2; }
+  .badge.gap  { background: #fef0f0; color: #c45656; border: 1px solid #fbc4c4; }
+
+  /* ===== 应用外框：深色侧栏 + 顶栏 + 内容区（照真实 layout/index.vue） ===== */
+  .app { display: flex; min-height: 560px; }
+
+  .sidebar {
+    width: 210px; flex-shrink: 0;
+    background: var(--side-bg);
+    color: var(--side-text);
+    display: flex; flex-direction: column;
+  }
+  .brand {
+    height: 56px; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 16px; font-weight: 600;
+    letter-spacing: .3px;
+  }
+  .menu { padding: 8px 0; }
+  .menu-item {
+    height: 46px; display: flex; align-items: center;
+    padding: 0 20px; font-size: 14px; cursor: pointer;
+    transition: background .2s, color .2s;
+  }
+  .menu-item:hover { background: var(--side-hover); color: #fff; }
+  .menu-item.active { color: var(--side-active); background: var(--side-hover); }
+  .menu-item.isnew::after {
+    content: "新"; font-size: 10px; color: #67c23a;
+    border: 1px solid #67c23a; border-radius: 2px; padding: 0 3px; margin-left: auto;
+  }
+
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  /* 真实 app 顶栏：只有右侧「姓名 + 退出」，无面包屑无头像（Day 16 原型的面包屑是当时的美化，这次照实画） */
+  .topbar {
+    height: 56px; background: #fff;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 12px; padding: 0 20px;
+  }
+  .topbar .username { color: var(--text-primary); }
+  .topbar .logout { color: var(--ep-primary); cursor: pointer; }
+
+  .content { padding: 20px; flex: 1; }
+  /* 独立卡片（不带外框时用，强调"这才是你要写的部分"） */
+  .card-standalone { margin: 0 20px 20px; }
+  .card {
+    background: #fff; border-radius: 4px; padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+
+  /* ===== 工具条 ===== */
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; gap: 12px; flex-wrap: wrap;
+  }
+  .toolbar .title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+
+  /* el-button 复刻 */
+  .btn {
+    height: 32px; padding: 0 16px; border-radius: 4px;
+    border: 1px solid var(--border-base); background: #fff;
+    color: var(--text-regular); font-size: 14px; cursor: pointer;
+    font-family: inherit; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .btn:hover { color: var(--ep-primary); border-color: #c6e2ff; background: #ecf5ff; }
+  .btn.primary { background: var(--ep-primary); border-color: var(--ep-primary); color: #fff; }
+  .btn.primary:hover { background: #66b1ff; border-color: #66b1ff; color: #fff; }
+
+  /* el-button link 复刻 */
+  .btn-link {
+    background: none; border: none; padding: 0;
+    font-size: 14px; cursor: pointer; font-family: inherit;
+    transition: opacity .2s;
+  }
+  .btn-link:hover { opacity: .7; }
+  .btn-link.primary { color: var(--ep-primary); }
+
+  /* ===== el-table 复刻 ===== */
+  .table-wrap { overflow-x: auto; }
+  table.eltable {
+    width: 100%; border-collapse: collapse; font-size: 14px;
+    border: 1px solid var(--border-light);
+  }
+  table.eltable th, table.eltable td {
+    text-align: left; padding: 11px 12px;
+    border-bottom: 1px solid var(--border-light);
+    border-right: 1px solid var(--border-light);
+  }
+  table.eltable th:last-child, table.eltable td:last-child { border-right: none; }
+  table.eltable thead th {
+    color: var(--text-secondary); font-weight: 500; background: #fff;
+    white-space: nowrap;
+  }
+  table.eltable tbody td { color: var(--text-regular); }
+  table.eltable tbody tr:hover td { background: var(--fill-light); }
+  table.eltable tbody tr:last-child td { border-bottom: none; }
+  .col-name { color: var(--text-primary); }
+  .nowrap { white-space: nowrap; }
+  .muted { color: var(--text-placeholder); }
+
+  /* 空表格提示 */
+  .empty {
+    text-align: center; padding: 40px 0;
+    color: var(--text-placeholder); font-size: 14px;
+  }
+
+  /* ===== 待补字段标注（红虚线，原型专用，非界面元素） ===== */
+  th.gapcol, td.gapcol {
+    background: #fffafa;
+    border-left: 1px dashed var(--ep-danger) !important;
+    border-right: 1px dashed var(--ep-danger) !important;
+  }
+  th.gapcol { color: #c45656; }
+  .gapmark {
+    display: inline-block; font-size: 10px; font-style: normal;
+    color: #fff; background: var(--ep-danger);
+    border-radius: 2px; padding: 0 4px; margin-left: 5px;
+    vertical-align: text-top; font-weight: 600;
+  }
+
+  /* ===== el-pagination 复刻 ===== */
+  .pager {
+    margin-top: 16px; display: flex; align-items: center;
+    justify-content: flex-end; gap: 8px;
+    font-size: 13px; color: var(--text-regular);
+  }
+  .pager .total { margin-right: 6px; }
+  .pager button, .pager .pg {
+    min-width: 28px; height: 28px; border: none; background: #fff;
+    color: var(--text-regular); border-radius: 4px;
+    font-size: 13px; cursor: pointer; font-variant-numeric: tabular-nums;
+  }
+  .pager .pg.active { color: var(--ep-primary); font-weight: 600; }
+  .pager button:disabled { color: #c0c4cc; cursor: not-allowed; }
+
+  /* ===== el-dialog 复刻 ===== */
+  .dialog-stage {
+    background: rgba(0,0,0,.5);
+    padding: 40px 20px; margin: 0 20px 20px;
+    border-radius: 4px;
+  }
+  .dialog {
+    width: 100%; max-width: 520px; margin: 0 auto;
+    background: #fff; border-radius: 4px;
+    box-shadow: 0 12px 32px 4px rgba(0,0,0,.16);
+  }
+  .dialog-head {
+    padding: 20px 20px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .dialog-head .t { font-size: 16px; color: var(--text-primary); font-weight: 500; }
+  .dialog-head .x { color: var(--text-placeholder); cursor: pointer; font-size: 16px; }
+  .dialog-body { padding: 10px 20px; }
+  .dialog-foot {
+    padding: 10px 20px 20px; display: flex; justify-content: flex-end; gap: 10px;
+  }
+
+  /* 只读描述区（el-descriptions 的近似形态，本页新增） */
+  .desc {
+    border: 1px solid var(--border-light); border-radius: 4px;
+    overflow: hidden; margin-bottom: 16px;
+  }
+  .desc-row { display: flex; border-bottom: 1px solid var(--border-light); }
+  .desc-row:last-child { border-bottom: none; }
+  .desc-row .k {
+    width: 110px; flex-shrink: 0;
+    background: var(--fill-light); color: var(--text-secondary);
+    padding: 9px 12px; font-size: 13px;
+  }
+  .desc-row .v { flex: 1; padding: 9px 12px; color: var(--text-regular); font-size: 13px; }
+  .desc-row .v.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+
+  /* el-form 复刻 */
+  .form-item { display: flex; align-items: flex-start; margin-bottom: 18px; }
+  .form-item .lbl {
+    width: 92px; flex-shrink: 0; text-align: right; padding-right: 12px;
+    font-size: 14px; color: var(--text-regular); line-height: 32px;
+  }
+  .form-item .ctrl { flex: 1; min-width: 0; }
+  .textarea {
+    width: 100%; min-height: 74px;
+    border: 1px solid var(--border-base); border-radius: 4px;
+    background: #fff; padding: 6px 11px;
+    font-size: 14px; color: var(--text-placeholder); line-height: 1.5;
+  }
+  .form-tip {
+    font-size: 12px; color: var(--text-secondary);
+    line-height: 1.5; margin-top: 4px;
+  }
+
+  /* ===== 底部决策回执表（原型专用） ===== */
+  .summary { margin: 0 20px 30px; background: #fff; border-radius: 4px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  .summary h3 { margin: 0 0 4px; font-size: 15px; color: var(--text-primary); }
+  .summary p.lead { margin: 0 0 14px; font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  table.cmp { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.cmp th, table.cmp td {
+    text-align: left; padding: 9px 11px; border: 1px solid var(--border-light);
+    vertical-align: top; line-height: 1.6;
+  }
+  table.cmp thead th { background: var(--fill-light); color: var(--text-primary); font-weight: 600; }
+  table.cmp td:first-child { color: var(--text-primary); font-weight: 500; width: 150px; }
+  .yes { color: var(--ep-success); font-weight: 600; }
+
+  @media (max-width: 760px) {
+    .sidebar { width: 60px; }
+    .brand { font-size: 12px; }
+    .menu-item { justify-content: center; padding: 0; font-size: 12px; }
+    .menu-item.isnew::after { display: none; }
+    .form-item { flex-direction: column; }
+    .form-item .lbl { width: auto; text-align: left; padding: 0 0 4px; line-height: 1.5; }
+  }
+</style>
+
+<div class="proto-note">
+  <b>原型近似图 · Day 17（待办页）</b>——依据已确认的 <code>00-需求文档.md</code> 绘制（决策①②③已定稿）。<br>
+  手工复刻 Element Plus 外观，用于确认<strong>布局结构与组件形态</strong>；圆角/阴影/间距与真实 EP 略有出入，最终以 <code>npm run dev</code> 实跑为准。数据为示意（按 2026-08-11 数据库现场编写：停在 <code>managerApprove</code> 的在途样本 + 验收要用的三级流程）。<br>
+  <b>⚠️ 红色虚线列</b>＝<strong>决策① 要补的后端字段</strong>（<code>TaskVO</code> 目前没有 <code>processDefinitionName</code> / <code>startUserName</code> / <code>businessKey</code>）——<strong>先落后端小改，这三列才有数据</strong>；其余列现接口就有。
+</div>
+
+
+<!-- ============================================================ -->
+<!-- 一、待办列表页 · manager 视角（完整外框）                        -->
+<!-- ============================================================ -->
+<div class="proto-section">
+  <h2>① 待办列表　<span class="route">/task</span>　<span class="badge now">manager 视角</span></h2>
+  <div class="sub">
+    调 <code>GET /task/todo</code>（仅 <code>current</code>/<code>size</code>，无筛选参数——待办本就该全处理，工具条只有标题）。
+    数据 = 候选组为我的角色（<code>taskCandidateGroup("manager")</code>）或已指派给我的任务，创建时间倒序。<br>
+    这一节给<strong>完整外框</strong>（侧栏+顶栏是 P0 的 layout，只需在 <code>menus</code> 数组加一项「待办任务」）；<strong>白卡片内容才是要写的 <code>views/task/index.vue</code></strong>，
+    结构照实例页 4 div 范本：<code>.task-page</code> &gt; <code>.toolbar</code> / <code>.table-wrap</code> / <code>.pager-wrap</code>。
+  </div>
+</div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">工作流平台</div>
+    <nav class="menu">
+      <div class="menu-item">首页</div>
+      <div class="menu-item">用户管理</div>
+      <div class="menu-item">流程管理</div>
+      <div class="menu-item">运行中的实例</div>
+      <div class="menu-item">我的发起</div>
+      <div class="menu-item active isnew">待办任务</div>
+      <div class="menu-item">关于</div>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <span class="username">王主管</span><span class="logout">退出</span>
+    </header>
+
+    <main class="content">
+      <div class="card">
+        <div class="toolbar">
+          <span class="title">待办任务</span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="eltable">
+            <thead>
+              <tr>
+                <th class="gapcol">流程名称<span class="gapmark">补</span></th>
+                <th class="gapcol">业务标识<span class="gapmark">补</span></th>
+                <th>任务名称</th>
+                <th class="gapcol">发起人<span class="gapmark">补</span></th>
+                <th>创建时间</th>
+                <th class="nowrap">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-name gapcol">报销流程</td>
+                <td class="gapcol">RB-2026-0012</td>
+                <td>经理审批</td>
+                <td class="gapcol">李員工</td>
+                <td class="nowrap">2026-08-11 21:05:32</td>
+                <td class="nowrap"><button class="btn-link primary">办理</button></td>
+              </tr>
+              <tr>
+                <td class="col-name gapcol">采购流程</td>
+                <td class="gapcol muted">—</td>
+                <td>经理审批</td>
+                <td class="gapcol">李員工</td>
+                <td class="nowrap">2026-08-03 10:41:07</td>
+                <td class="nowrap"><button class="btn-link primary">办理</button></td>
+              </tr>
+              <tr>
+                <td class="col-name gapcol">请假流程</td>
+                <td class="gapcol">QJ-2026-0009</td>
+                <td>经理审批</td>
+                <td class="gapcol">李員工</td>
+                <td class="nowrap">2026-08-03 10:38:26</td>
+                <td class="nowrap"><button class="btn-link primary">办理</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pager">
+          <span class="total">共 3 条</span>
+          <button disabled aria-label="上一页">‹</button>
+          <span class="pg active">1</span>
+          <button disabled aria-label="下一页">›</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- 二、同一页面 · admin 视角                                        -->
+<!-- ============================================================ -->
+<div class="proto-section">
+  <h2>② 同一页面 · admin 视角（两级流转后）　<span class="badge now">代码零分支</span></h2>
+  <div class="sub">
+    <strong>同一个组件、零角色判断代码</strong>——数据随登录人变，因为后端按 <code>UserContext.role</code> 查候选组。
+    manager 在 ① 里办掉「报销流程」的一级后，任务流转到 <code>adminApprove</code>，admin 登录看到的就是下面这样（任务名称变成「财务审批」）。
+    这正是验收第 3 条要看的画面。
+  </div>
+</div>
+
+<div class="card-standalone">
+  <div class="card">
+    <div class="toolbar">
+      <span class="title">待办任务</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="eltable">
+        <thead>
+          <tr>
+            <th class="gapcol">流程名称<span class="gapmark">补</span></th>
+            <th class="gapcol">业务标识<span class="gapmark">补</span></th>
+            <th>任务名称</th>
+            <th class="gapcol">发起人<span class="gapmark">补</span></th>
+            <th>创建时间</th>
+            <th class="nowrap">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="col-name gapcol">报销流程</td>
+            <td class="gapcol">RB-2026-0012</td>
+            <td>财务审批</td>
+            <td class="gapcol">李員工</td>
+            <td class="nowrap">2026-08-11 21:12:44</td>
+            <td class="nowrap"><button class="btn-link primary">办理</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pager">
+      <span class="total">共 1 条</span>
+      <button disabled aria-label="上一页">‹</button>
+      <span class="pg active">1</span>
+      <button disabled aria-label="下一页">›</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- 三、办理弹窗                                                    -->
+<!-- ============================================================ -->
+<div class="proto-section">
+  <h2>③ 办理弹窗（本页真正的新东西）　<span class="badge now">el-dialog + 只读区 + el-form</span></h2>
+  <div class="sub">
+    点行内「办理」→ 先调 <code>GET /task/{taskId}</code> 拉 <code>TaskFormVO</code> → 弹窗<strong>上半只读区</strong>展示申请内容、<strong>下半</strong>填审批意见 →
+    「提交办理」调 <code>POST /task/complete</code>（body：<code>{ taskId, variables: { approved: true, comment } }</code>）。<br>
+    <strong>决策②已定：单按钮，无「拒绝」</strong>——四个模板都是直线流程没有排他网关，<code>approved:false</code> 只会被记录、流程照样流转，放拒绝按钮就是界面撒谎。真拒绝已登记挂起项（P8 第三节第 6 条），留 P5 设计器后加网关再升级双按钮。
+  </div>
+</div>
+
+<div class="dialog-stage">
+  <div class="dialog">
+    <div class="dialog-head">
+      <span class="t">办理任务</span>
+      <span class="x">✕</span>
+    </div>
+    <div class="dialog-body">
+
+      <!-- 上半：只读区。前两行取 TaskFormVO 自身字段，其余按 variables 的 key-value 动态渲染 -->
+      <div class="desc">
+        <div class="desc-row"><span class="k">流程 / 节点</span><span class="v">报销流程 · 财务审批</span></div>
+        <div class="desc-row"><span class="k">业务标识</span><span class="v">RB-2026-0012</span></div>
+        <div class="desc-row"><span class="k">initiator</span><span class="v mono">3</span></div>
+        <div class="desc-row"><span class="k">reason</span><span class="v">采购部 Q3 服务器款项报销</span></div>
+      </div>
+      <div class="form-tip" style="margin:-8px 0 16px">
+        「流程 / 节点」「业务标识」用 <code>TaskFormVO</code> 的字段（前者靠决策①补的 <code>processDefinitionName</code>）；
+        下面的行按 <code>variables</code> 的 key-value <strong>动态渲染，不写死字段名</strong>——不同流程变量不同（days / reason / initiator…）。
+        key 原样显示、<code>initiator</code> 存的是 userId，值美化不在本页范围（P6 表单渲染器的活）。
+      </div>
+
+      <!-- 下半：审批意见（决策③：选填） -->
+      <div class="form-item">
+        <span class="lbl">审批意见</span>
+        <div class="ctrl">
+          <div class="textarea">选填，如：核对无误，同意报销</div>
+          <div class="form-tip">
+            对应 <code>variables.comment</code>；空值照 myStart 体例 <code>.trim() || undefined</code>，不往后端塞空串。
+            <code>approved</code> 由前端固定传 <code>true</code>。
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="dialog-foot">
+      <button class="btn">取 消</button>
+      <button class="btn primary">提交办理</button>
+    </div>
+  </div>
+</div>
+
+<div class="proto-section" style="border-top:none;padding-top:0">
+  <div class="sub">
+    弹窗行为沿用 myStart 六决策的适用项：<code>:show-close="!submitting"</code>（提交中锁右上角 X）｜ 详情加载失败 catch 自己弹 warning、不弹窗 ｜
+    提交成功 → 关弹窗 + 刷新列表（该行消失，任务已流转走）；若当前页被办空且非第一页，页码回退一页再查（同实例页终止后的处理）｜
+    办理失败（如「已被他人认领」）→ <strong>不关弹窗</strong>，拦截器弹错后可改后重试。
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- 四、空态 · employee 视角                                        -->
+<!-- ============================================================ -->
+<div class="proto-section">
+  <h2>④ 空态 · employee 视角　<span class="badge now">el-table 自带</span></h2>
+  <div class="sub">
+    employee 不在任何审批节点的候选组里，待办恒为空——这是<strong>正常状态不是错误</strong>，el-table 自带「暂无数据」即可，不做额外空态设计（验收第 5 条）。
+  </div>
+</div>
+
+<div class="card-standalone">
+  <div class="card">
+    <div class="toolbar">
+      <span class="title">待办任务</span>
+    </div>
+    <div class="table-wrap">
+      <table class="eltable">
+        <thead>
+          <tr>
+            <th class="gapcol">流程名称<span class="gapmark">补</span></th>
+            <th class="gapcol">业务标识<span class="gapmark">补</span></th>
+            <th>任务名称</th>
+            <th class="gapcol">发起人<span class="gapmark">补</span></th>
+            <th>创建时间</th>
+            <th class="nowrap">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="6"><div class="empty">暂无数据</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 0 条</span>
+      <button disabled aria-label="上一页">‹</button>
+      <span class="pg active">1</span>
+      <button disabled aria-label="下一页">›</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- 五、决策回执 + 落地顺序                                          -->
+<!-- ============================================================ -->
+<div class="summary">
+  <h3>决策回执（三项均已定稿，2026-08-11）与落地顺序</h3>
+  <p class="lead">与 Day 16 原型不同，这张表不再是"待你定"，是"已定的备忘"——原型确认后按下面顺序落地。</p>
+
+  <table class="cmp">
+    <thead>
+      <tr><th>决策</th><th>定稿</th><th>对本原型的体现</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>① 列表三个缺字段</td>
+        <td><span class="yes">补后端</span>：<code>TaskVO</code> 加 <code>processDefinitionName</code> / <code>startUserName</code> / <code>businessKey</code>，<code>todo()</code> 末尾照 Day 16 <code>enrich()</code> 套路批量填充（整页固定次数查询，别写 N+1）</td>
+        <td>红虚线三列 + 弹窗「流程 / 节点」「业务标识」两行。<strong>后端小改先行，前端才有数据可调</strong></td>
+      </tr>
+      <tr>
+        <td>② 办理按钮形态</td>
+        <td><span class="yes">单按钮「提交办理」</span>，<code>approved</code> 固定 true；真拒绝已登记挂起项（P8 §3.6），P5 后加网关再升级</td>
+        <td>③ 节弹窗只有一个 primary 按钮</td>
+      </tr>
+      <tr>
+        <td>③ 审批意见</td>
+        <td><span class="yes">选填</span>，空值 <code>.trim() || undefined</code></td>
+        <td>③ 节「审批意见」无必填星号</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="lead" style="margin-top:14px;margin-bottom:0">
+    <strong>落地顺序</strong>（原型确认后）：后端小改（VO 三字段 + enrich，knife4j 里 <code>todo</code> 三字段有值即算过）→
+    <code>api/task.ts</code>（照 <code>api/instance.ts</code> 体例，3 函数：<code>pageTodo</code> / <code>taskDetail</code> / <code>completeTask</code>）→
+    页面三步法（① 4 div 布局 → ② 表格+分页+办理弹窗 → ③ 样式四条，竞态控件挂 <code>:disabled="loading"</code>）→
+    验收 6 条（需求文档第六节）→ 收工回填 <code>plan/P4</code> 打卡行 + <code>测试进度断点.md</code>。
+  </p>
+</div>
